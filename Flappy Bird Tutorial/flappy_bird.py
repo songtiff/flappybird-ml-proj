@@ -3,6 +3,7 @@ import neat
 import time
 import os
 import random #randomly set the pipes
+pygame.font.init()
 
 #access img folders
 os.chdir("C:/Users/Tiffany/Downloads")
@@ -20,6 +21,8 @@ BIRD_IMGS = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bi
 PIPE_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "pipe.png")))
 BASE_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "base.png")))
 BG_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bg.png")))
+
+STAT_FONT = pygame.font.SysFont("comicsans", 50)
 
 class Bird:
     IMGS = BIRD_IMGS
@@ -178,17 +181,30 @@ class Base:
         win.blit(self.IMG, (self.x1, self.y))
         win.blit(self.IMG, (self.x2, self.y))
 
-def draw_window(win, bird): #draw the background image and bird on top of it
+def draw_window(win, bird, pipes, base, score): #draw the background image and bird on top of it
     win.blit(BG_IMG, (0,0)) #blit just draws
+    for pipe in pipes:
+        pipe.draw(win)
+
+    #render font
+    text = STAT_FONT.render("Score: " + str(score), 1, (255, 255, 255))
+    win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
+
+    base.draw(win)
+
     bird.draw(win)
     pygame.display.update()
 
  #main function that runs our loop for the game   
 def main():
-    bird = Bird(200, 200)
+    bird = Bird(230, 350)
+    base = Base(730)
+    pipes = [Pipe(700)]
     run = True
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
     clock = pygame.time.Clock()
+
+    score = 0
 
     while run: #boolean flag to break the game later when it is false
         clock.tick(30) #slow down flappy's fall rate
@@ -197,7 +213,39 @@ def main():
                 run = False
 
         #bird.move()
-        draw_window(win, bird)
+        add_pipe = False
+        rem = [] #list to remove
+        for pipe in pipes:
+            if pipe.collide(bird):
+                pass
+            
+            #check if pipe is completely off screen 
+            if pipe.x + pipe.PIPE_TOP.get_width() < 0:
+                rem.append(pipe)
+
+            #check if we have passed the pipe 
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                add_pipe = True
+
+            pipe.move()
+
+        #increment player score count and show pipes
+        if add_pipe:
+            score += 1
+            pipes.append(Pipe(650)) #distance of pipe spawnning closer/further away
+
+        #iterate through list and remove all the pipes we have passed that
+        #we stored in our rem array
+        for r in rem:
+            pipes.remove(r)
+
+        #if flappy hits the ground, game over
+        if bird.y + bird.img.get_height() >= 730:
+            pass
+
+        base.move()
+        draw_window(win, bird, pipes, base, score)
 
     pygame.quit()
     quit()
