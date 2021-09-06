@@ -1,1 +1,1 @@
-# flappybird_miniproj
+# Flappy Bird Using Python NEAT  
